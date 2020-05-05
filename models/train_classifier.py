@@ -1,112 +1,95 @@
-import sys
-import nltk
-nltk.download(['punkt', 'wordnet', 'stopwords'])
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize, RegexpTokenizer
-from nltk.stem import WordNetLemmatizer
+import sys, pickle, re
 import pandas as pd
-from sqlalchemy import create_engine
-import re
-from sklearn.pipeline import Pipeline
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import RegexpTokenizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.metrics import classification_report, accuracy_score
-import pickle
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
+from sqlalchemy import create_engine
 
-def load_data(database_filepath):
-    '''
-    Load data from database as dataframe
-    Input:
-        database_filepath: File path of sql database
-    Output:
-        X: Message data (features)
-        Y: Categories (target)
-        category_names: Labels for 36 categories
-    '''
-    engine = create_engine('sqlite:///' + database_filepath)
-    df = pd.read_sql_table('disaster_messages', engine)
-    X = df['message']
-    Y = df.iloc[:, 4:]
-    category_names = list(df.columns[4:])
 
-    return X, Y, category_names
+def load_data(database_filepath, table_name='disaster_messages'):
+    '''
+    Fucntion to load the database from the given filepath and process them as X, y and category_names
+    Input: Databased filepath
+    Output: Returns the Features X & target y along with target columns names catgeory_names
+    '''
+
+    engine = create_engine("sqlite:///{}".format(database_filepath))
+    df = pd.read_sql_table(table_name, engine)
+
+    X = df["message"]
+    y = df[df.columns[4:]]
+
+    category_names = y.columns
+    return X, y, category_names
 
 
 def tokenize(text):
-    '''
-    Tokenize and clean text
-    Input:
-        text: original message text
-    Output:
-        lemmed: Tokenized, cleaned, and lemmatized text
-    '''
-    # Normalize Text
-    text = re.sub(r"[^a-zA-Z0-9]", ' ', text.lower())
-    # Tokenize
-    words = word_tokenize(text)
-    # Remove Stopwords
-    words = [w for w in words if w not in stopwords.words('english')]
-    # Lemmatize
-    lemmatizer = WordNetLemmatizer()
-    lemmed = [lemmatizer.lemmatize(w, pos='n').strip() for w in words]
-    lemmed = [lemmatizer.lemmatize(w, pos='v').strip() for w in lemmed]
+    """tokenize and transform input text. Return cleaned text"""
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    detected_urls = re.findall(url_regex, text)
+    for url in detected_urls:
+        text = text.replace(url, "urlplaceholder")
 
-    return lemmed
+    # take out all punctuation while tokenizing
+    tokenizer = RegexpTokenizer(r'\w+')
+    tokens = tokenizer.tokenize(text)
+
+    # lemmatize as shown in the lesson
+    lemmatizer = WordNetLemmatizer()
+    clean_tokens = []
+    for token in tokens:
+        clean_token = lemmatizer.lemmatize(token).lower().strip()
+        clean_tokens.append(clean_token)
+    return clean_tokens
 
 
 def build_model():
-    '''
-    Build a ML pipeline using ifidf, random forest, and gridsearch
-    Input: None
-    Output:
-        Results of GridSearchCV
-    '''
+    """Return Grid Search model with pipeline and Classifier"""
+    moc = MultiOutputClassifier(RandomForestClassifier())
+
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(RandomForestClassifier()))
+        ('clf', moc)
     ])
 
-    parameters = {'clf__estimator__n_estimators': [50, 100],
-                  'clf__estimator__min_samples_split': [2, 3, 4],
-                  'clf__estimator__criterion': ['entropy', 'gini']
-                  }
-    cv = GridSearchCV(pipeline, param_grid=parameters)
+    parameters = {'clf__estimator__max_depth': [10, 50, None],
+                  'clf__estimator__min_samples_leaf': [2, 5, 10]}
 
+    cv = GridSearchCV(pipeline, parameters)
     return cv
 
 
-def evaluate_model(model, X_test, Y_test, category_names):
-    '''
-    Evaluate model performance using test data
-    Input:
-        model: Model to be evaluated
-        X_test: Test data (features)
-        Y_test: True lables for Test data
-        category_names: Labels for 36 categories
-    Output:
-        Print accuracy and classfication report for each category
-    '''
-    Y_pred = model.predict(X_test)
-
-    # Calculate the accuracy for each of them.
-    for i in range(len(category_names)):
-        print("Category:", category_names[i],"\n", classification_report(Y_test.iloc[:, i].values, Y_pred[:, i]))
-        print('Accuracy of %25s: %.2f' %(category_names[i], accuracy_score(Y_test.iloc[:, i].values, Y_pred[:,i])))
+def evaluate_model(model, X_test, y_test, category_names):
+    """Print model results
+    INPUT
+    model -- required, estimator-object
+    X_test -- required
+    y_test -- required
+    category_names = required, list of category strings
+    OUTPUT
+    None
+    """
+    # Get results and add them to a dataframe.
+    y_pred = model.predict(X_test)
+    print(classification_report(y_test, y_pred, target_names=category_names))
+    results = pd.DataFrame(columns=['Category', 'f_score', 'precision', 'recall'])
+    print(results.to_string())
 
 
 def save_model(model, model_filepath):
     '''
-    Save model as a pickle file
-    Input:
-        model: Model to be saved
-        model_filepath: path of the output pick file
-    Output:
-        A pickle file of saved model
+    Save the model as pickle file in the give filepath
+    @:param model: model object
+    @:param model_filepath
     '''
-    pickle.dump(model, open(model_filepath, "wb"))
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
@@ -115,13 +98,13 @@ def main():
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y, category_names = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-        
+
         print('Building model...')
         model = build_model()
-        
+
         print('Training model...')
         model.fit(X_train, Y_train)
-        
+
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
 
@@ -131,9 +114,9 @@ def main():
         print('Trained model saved!')
 
     else:
-        print('Please provide the filepath of the disaster messages database '\
-              'as the first argument and the filepath of the pickle file to '\
-              'save the model to as the second argument. \n\nExample: python '\
+        print('Please provide the filepath of the disaster messages database ' \
+              'as the first argument and the filepath of the pickle file to ' \
+              'save the model to as the second argument. \n\nExample: python ' \
               'train_classifier.py ../data/DisasterResponse.db classifier.pkl')
 
 
