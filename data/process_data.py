@@ -44,14 +44,17 @@ def clean_data(df):
     # concatenate the original dataframe with the new `categories` dataframe
     df = pd.concat([df, categories], axis=1)
     # remove duplicates
-    df.drop_duplicates(inplace=True)
+    df.drop_duplicates(subset='id', inplace=True)
 
     return df
 
 
 def save_data(df, database_filename):
     """
-    It saves the dataframe as as sql database
+    Save df into sqlite db
+
+    @:param df: dataset to be saved into sqlite
+    @:param database_filename: name of the database with ending .db
 
     """
     engine = create_engine('sqlite:///{}'.format(database_filename))

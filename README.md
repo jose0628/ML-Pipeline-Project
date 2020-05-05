@@ -1,5 +1,28 @@
 # Disaster Response Pipeline Project
 
+## Project Motivation
+
+This project is to analyze disaster data from Figure Eight to build a model for an API that classifies disaster messages 
+
+
+## Project Structure
+
+    .
+    ├── app     
+    │   ├── run.py                           # Flask file that runs app
+    │   └── templates   
+    │       ├── go.html                      # Classification result page of web app
+    │       └── master.html                  # Main page of web app    
+    ├── data                   
+    │   ├── disaster_categories.csv          # Dataset including all the categories  
+    │   ├── disaster_messages.csv            # Dataset including all the messages
+    │   └── process_data.py                  # Data cleaning
+    ├── models
+    │   └── train_classifier.py              # Train ML model           
+    └── README.md
+
+
+
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
 
