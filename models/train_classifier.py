@@ -76,8 +76,8 @@ def evaluate_model(model, X_test, y_test, category_names):
     Provide the model results based on the predictions
 
     :param model: the model estimator object
-    :param X_test:
-    :param y_test:
+    :param X_test: columns with features for th test
+    :param y_test: column with the ground truth
     :param category_names: list of categories as strings
     """
     # Get results and add them to a dataframe.
