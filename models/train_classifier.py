@@ -14,8 +14,8 @@ from sqlalchemy import create_engine
 
 def load_data(database_filepath, table_name='disaster_messages'):
     '''
-    Fucntion to load the database from the given filepath and process them as X, y and category_names
-    Input: Databased filepath
+    It loads
+    @:param: Databased filepath
     Output: Returns the Features X & target y along with target columns names catgeory_names
     '''
 
@@ -30,7 +30,10 @@ def load_data(database_filepath, table_name='disaster_messages'):
 
 
 def tokenize(text):
-    """tokenize and transform input text. Return cleaned text"""
+    """
+    :param text: string to tokenize
+    :return: text in form as clean token
+    """
     url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     detected_urls = re.findall(url_regex, text)
     for url in detected_urls:
@@ -50,7 +53,9 @@ def tokenize(text):
 
 
 def build_model():
-    """Return Grid Search model with pipeline and Classifier"""
+    """
+    :return: Grid Search model with pipeline and parameters
+    """
     moc = MultiOutputClassifier(RandomForestClassifier())
 
     pipeline = Pipeline([
@@ -67,21 +72,17 @@ def build_model():
 
 
 def evaluate_model(model, X_test, y_test, category_names):
-    """Print model results
-    INPUT
-    model -- required, estimator-object
-    X_test -- required
-    y_test -- required
-    category_names = required, list of category strings
-    OUTPUT
-    None
+    """
+    Provide the model results based on the predictions
+
+    :param model: the model estimator object
+    :param X_test:
+    :param y_test:
+    :param category_names: list of categories as strings
     """
     # Get results and add them to a dataframe.
     y_pred = model.predict(X_test)
     print(classification_report(y_test, y_pred, target_names=category_names))
-    results = pd.DataFrame(columns=['Category', 'f_score', 'precision', 'recall'])
-    print(results.to_string())
-
 
 def save_model(model, model_filepath):
     '''
