@@ -1,9 +1,12 @@
 # Disaster Response Pipeline Project
 
 ## Project Motivation
+In an emergency time is crucial and the rescuers or an organization can be overloaded with the ammount of messages
+generated during a crisis. This project uses Machine Learning, in order to read those emergency messages and
+categorize them into categories. Therefore, emergency services can prioritize the need and saving time reading the entire message.
 
-This project is to analyze disaster data from Figure Eight to build a model for an API that classifies disaster messages 
-
+The API and frontend developed gives a glimpse of the data contained in a database ad it provide the predictions for
+emergency messages as shown below.
 
 <img src='media/project_cover.gif' width="800" height="500" />
 <br>
@@ -11,7 +14,7 @@ This project is to analyze disaster data from Figure Eight to build a model for 
 
 ## Project Requirements
 
-
+* Python3 with an [Anaconda Distribution](https://www.anaconda.com/products/individual) (recommended)
 
 ## Project Structure
 
@@ -46,3 +49,7 @@ This project is to analyze disaster data from Figure Eight to build a model for 
     `python run.py`
 
 3. Go to http://0.0.0.0:3001/
+
+## Acknowledgements
+* Udacity for offering the challenge
+* Figure Eith for providing the datasets
