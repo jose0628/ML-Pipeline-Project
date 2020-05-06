@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import GridSearchCV
 from sqlalchemy import create_engine
 
@@ -71,6 +72,22 @@ def build_model():
     return cv
 
 
+def performance_results(y_test, y_pred):
+    results = pd.DataFrame(columns=['Category', 'f_score', 'precision', 'recall'])
+    num = 0
+    for cat in y_test.columns:
+        precision, recall, f_score, support = precision_recall_fscore_support(y_test[cat], y_pred[:,num], average='weighted')
+        results.set_value(num+1, 'Category', cat)
+        results.set_value(num+1, 'f_score', f_score)
+        results.set_value(num+1, 'precision', precision)
+        results.set_value(num+1, 'recall', recall)
+        num += 1
+    print('Aggregated f_score:', results['f_score'].mean())
+    print('Aggregated precision:', results['precision'].mean())
+    print('Aggregated recall:', results['recall'].mean())
+    return results
+
+
 def evaluate_model(model, X_test, y_test, category_names):
     """
     Provide the model results based on the predictions
@@ -82,7 +99,9 @@ def evaluate_model(model, X_test, y_test, category_names):
     """
     # Get results and add them to a dataframe.
     y_pred = model.predict(X_test)
-    print(classification_report(y_test, y_pred, target_names=category_names))
+    performance_results(y_test, y_pred)
+
+
 
 def save_model(model, model_filepath):
     '''
