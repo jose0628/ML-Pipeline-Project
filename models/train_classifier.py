@@ -73,15 +73,18 @@ def build_model():
 
 
 def performance_results(y_test, y_pred):
-    results = pd.DataFrame(columns=['Category', 'f_score', 'precision', 'recall'])
     num = 0
+    categories, f_scores, precisions, recalls = [], [], [], []
     for cat in y_test.columns:
         precision, recall, f_score, support = precision_recall_fscore_support(y_test[cat], y_pred[:,num], average='weighted')
-        results.set_value(num+1, 'Category', cat)
-        results.set_value(num+1, 'f_score', f_score)
-        results.set_value(num+1, 'precision', precision)
-        results.set_value(num+1, 'recall', recall)
-        num += 1
+
+        categories.append(cat)
+        f_scores.append(f_score)
+        precisions.append(precision)
+        recalls.append(recall)
+
+    results = pd.DataFrame({'Category':categories, 'f_score': f_scores, 'precision': precisions, 'recall':recalls})
+
     print('Aggregated f_score:', results['f_score'].mean())
     print('Aggregated precision:', results['precision'].mean())
     print('Aggregated recall:', results['recall'].mean())
