@@ -6,9 +6,9 @@ from sqlalchemy import create_engine
 def load_data(messages_filepath, categories_filepath):
     """
     It loads the data and merge the messages and categories datasets based on the unique id
-    @:param messages_filepath
-    @:param categories_filepath
-    @:return merged dataset based on ids
+    :param messages_filepath
+    :param categories_filepath
+    :return merged dataset based on ids
 
     """
     messages = pd.read_csv(messages_filepath)
@@ -20,7 +20,8 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     """
-    It receives a raw dataset
+    It receives a raw dataset and process it
+
     :param df: raw dataframe
     :return: Transformed dataframe with features ready for the ML Pipeline
     """
@@ -53,8 +54,8 @@ def save_data(df, database_filename):
     """
     Save df into sqlite db
 
-    @:param df: dataset to be saved into sqlite
-    @:param database_filename: name of the database with ending .db
+    :param df: dataset to be saved into sqlite
+    :param database_filename: name of the database with ending .db
 
     """
     engine = create_engine('sqlite:///{}'.format(database_filename))

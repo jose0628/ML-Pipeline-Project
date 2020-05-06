@@ -2,12 +2,11 @@ import sys, pickle, re
 import pandas as pd
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import RegexpTokenizer
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import GridSearchCV
 from sqlalchemy import create_engine
@@ -15,9 +14,9 @@ from sqlalchemy import create_engine
 
 def load_data(database_filepath, table_name='disaster_messages'):
     '''
-    It loads
-    @:param: Databased filepath
-    Output: Returns the Features X & target y along with target columns names catgeory_names
+    It loads the database and extract data from the table
+    :param: Databased filepath
+    Output: Returns the Features X & target y along with target columns names category_names
     '''
 
     engine = create_engine("sqlite:///{}".format(database_filepath))
@@ -40,11 +39,9 @@ def tokenize(text):
     for url in detected_urls:
         text = text.replace(url, "urlplaceholder")
 
-    # take out all punctuation while tokenizing
     tokenizer = RegexpTokenizer(r'\w+')
     tokens = tokenizer.tokenize(text)
 
-    # lemmatize as shown in the lesson
     lemmatizer = WordNetLemmatizer()
     clean_tokens = []
     for token in tokens:
@@ -57,12 +54,12 @@ def build_model():
     """
     :return: Grid Search model with pipeline and parameters
     """
-    moc = MultiOutputClassifier(RandomForestClassifier())
+    MOC = MultiOutputClassifier(DecisionTreeClassifier())
 
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
-        ('clf', moc)
+        ('clf', MOC)
     ])
 
     parameters = {'clf__estimator__max_depth': [10, 50, None],
@@ -73,23 +70,29 @@ def build_model():
 
 
 def performance_results(y_test, y_pred):
-    num = 0
+    """
+    It takes the results of the predictions and compare them with the ground truth
+    :param y_test
+    :param y_pred
+    :return the results of the performance by category in a dataframe
+    """
+    index = 0
     categories, f_scores, precisions, recalls = [], [], [], []
-    for cat in y_test.columns:
-        precision, recall, f_score, support = precision_recall_fscore_support(y_test[cat],
-                                                                              y_pred[:, num],
+    for category in y_test.columns:
+        precision, recall, f_score, support = precision_recall_fscore_support(y_test[category],
+                                                                              y_pred[:, index],
                                                                               average='weighted')
 
-        categories.append(cat)
+        categories.append(category)
         f_scores.append(f_score)
         precisions.append(precision)
         recalls.append(recall)
 
     results = pd.DataFrame({'Category':categories, 'f_score': f_scores, 'precision': precisions, 'recall':recalls})
 
-    print('Aggregated f_score:', results['f_score'].mean())
     print('Aggregated precision:', results['precision'].mean())
     print('Aggregated recall:', results['recall'].mean())
+    print('Aggregated f_score:', results['f_score'].mean())
     return results
 
 
@@ -110,8 +113,9 @@ def evaluate_model(model, X_test, y_test):
 def save_model(model, model_filepath):
     '''
     Save the model as pickle file in the give filepath
-    @:param model: model object
-    @:param model_filepath
+
+    :param model: model object
+    :param model_filepath
     '''
     pickle.dump(model, open(model_filepath, 'wb'))
 
