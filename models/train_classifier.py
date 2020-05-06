@@ -72,11 +72,14 @@ def build_model():
     return cv
 
 
-def performance_results(y_test, y_pred):
+def performance_results(y_test, y_pred, category_names):
     num = 0
     categories, f_scores, precisions, recalls = [], [], [], []
     for cat in y_test.columns:
-        precision, recall, f_score, support = precision_recall_fscore_support(y_test[cat], y_pred[:,num], average='weighted')
+        precision, recall, f_score, support = precision_recall_fscore_support(y_test[cat],
+                                                                              y_pred[:, num],
+                                                                              average='weighted',
+                                                                              labels=category_names)
 
         categories.append(cat)
         f_scores.append(f_score)
@@ -102,7 +105,7 @@ def evaluate_model(model, X_test, y_test, category_names):
     """
     # Get results and add them to a dataframe.
     y_pred = model.predict(X_test)
-    performance_results(y_test, y_pred)
+    performance_results(y_test, y_pred, category_names)
 
 
 
