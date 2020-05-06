@@ -5,6 +5,14 @@
 This project is to analyze disaster data from Figure Eight to build a model for an API that classifies disaster messages 
 
 
+<img src='media/project_cover.gif' width="800" height="500" />
+<br>
+
+
+## Project Requirements
+
+
+
 ## Project Structure
 
     .
@@ -18,7 +26,10 @@ This project is to analyze disaster data from Figure Eight to build a model for 
     │   ├── disaster_messages.csv            # Dataset including all the messages
     │   └── process_data.py                  # Data cleaning
     ├── models
-    │   └── train_classifier.py              # Train ML model           
+    │   └── train_classifier.py              # Train ML model    
+    ├── pipeline_design     
+        │   ├── ETL Pipeline Preparation.ipynb   # Design of the ETL Pipeline
+        │   └── ML Pipeline Preparation.ipynb    # Design of the ML Pipeline       
     └── README.md
 
 
