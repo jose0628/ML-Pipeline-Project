@@ -17,6 +17,9 @@ emergency messages as shown below.
 
 * Python3 with an [Anaconda Distribution](https://www.anaconda.com/products/individual) (recommended)
 
+Or
+* Python 3 with the necessary requirements, open up a virtual environment and run `pip install -r requirements.txt`
+
 ## Project Structure
 
     .
