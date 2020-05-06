@@ -72,14 +72,13 @@ def build_model():
     return cv
 
 
-def performance_results(y_test, y_pred, category_names):
+def performance_results(y_test, y_pred):
     num = 0
     categories, f_scores, precisions, recalls = [], [], [], []
     for cat in y_test.columns:
         precision, recall, f_score, support = precision_recall_fscore_support(y_test[cat],
                                                                               y_pred[:, num],
-                                                                              average='weighted',
-                                                                              labels=category_names)
+                                                                              average='weighted')
 
         categories.append(cat)
         f_scores.append(f_score)
@@ -94,19 +93,18 @@ def performance_results(y_test, y_pred, category_names):
     return results
 
 
-def evaluate_model(model, X_test, y_test, category_names):
+def evaluate_model(model, X_test, y_test):
     """
     Provide the model results based on the predictions
 
     :param model: the model estimator object
     :param X_test: columns with features for th test
     :param y_test: column with the ground truth
-    :param category_names: list of categories as strings
+
     """
     # Get results and add them to a dataframe.
     y_pred = model.predict(X_test)
-    performance_results(y_test, y_pred, category_names)
-
+    performance_results(y_test, y_pred)
 
 
 def save_model(model, model_filepath):
@@ -132,7 +130,7 @@ def main():
         model.fit(X_train, Y_train)
 
         print('Evaluating model...')
-        evaluate_model(model, X_test, Y_test, category_names)
+        evaluate_model(model, X_test, Y_test)
 
         print('Saving model...\n    MODEL: {}'.format(model_filepath))
         save_model(model, model_filepath)
