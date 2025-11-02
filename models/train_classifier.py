@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import GridSearchCV
 from sqlalchemy import create_engine
+import nltk
+nltk.download('wordnet')
 
 
 def load_data(database_filepath, table_name='disaster_messages'):
@@ -57,7 +59,7 @@ def build_model():
     MOC = MultiOutputClassifier(DecisionTreeClassifier())
 
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize)),
+        ('vect', CountVectorizer(tokenizer=tokenize, token_pattern=None)),
         ('tfidf', TfidfTransformer()),
         ('clf', MOC)
     ])
@@ -65,7 +67,15 @@ def build_model():
     parameters = {'clf__estimator__max_depth': [10, 50, None],
                   'clf__estimator__min_samples_leaf': [2, 5, 10]}
 
-    cv = GridSearchCV(pipeline, parameters)
+    # cv = GridSearchCV(pipeline, parameters)
+
+    cv = GridSearchCV(
+        pipeline,
+        parameters,
+        cv=5,            # whatever you use
+        n_jobs=-1,       # parallelize to use all cores
+        verbose=2        # <-- progress lines from joblib/Parallel
+    )
     return cv
 
 
@@ -145,7 +155,7 @@ def main():
         print('Please provide the filepath of the disaster messages database ' \
               'as the first argument and the filepath of the pickle file to ' \
               'save the model to as the second argument. \n\nExample: python ' \
-              'train_classifier.py ../data/DisasterResponse.db classifier.pkl')
+              'train_classifier.py ../data/db_disaster_response.db classifier.pkl')
 
 
 if __name__ == '__main__':

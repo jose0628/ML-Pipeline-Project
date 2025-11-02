@@ -9,8 +9,25 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sklearn.externals import joblib
+import joblib
 from sqlalchemy import create_engine
+
+import nltk
+
+# Ensure required data is present (safe if already installed)
+for res in ["punkt", "punkt_tab", "wordnet"]:
+    try:
+        # map resource name to the internal path NLTK checks
+        path = "tokenizers/punkt" if res == "punkt" else \
+            "tokenizers/punkt_tab" if res == "punkt_tab" else \
+                "corpora/wordnet"
+        nltk.data.find(path)
+    except LookupError:
+        try:
+            nltk.download(res)
+        except:
+            pass  # in older NLTK, punkt_tab may not exist; ignore
+
 
 
 app = Flask(__name__)
